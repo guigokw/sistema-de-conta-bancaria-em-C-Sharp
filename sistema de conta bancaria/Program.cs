@@ -1,12 +1,15 @@
-﻿using System.ComponentModel.Design;
+﻿using Microsoft.EntityFrameworkCore;
+using Sistema_de_conta_bancaria;
+using System.ComponentModel.Design;
 using System.Linq.Expressions;
 using System.Security.Cryptography.X509Certificates;
 using static System.Runtime.InteropServices.JavaScript.JSType;
 
 namespace sistema_de_conta_bancaria;
 
-class ContaBancaria
+public class ContaBancaria
 {
+
     private string _numeroConta;
 
     public string NumeroConta
@@ -96,9 +99,9 @@ class BancoService
 {
     List<ContaBancaria> contas = new List<ContaBancaria>();
     HashSet<string> numero = new HashSet<string>();
-
     public void adicionarConta()
     {
+
         try
         {
             Console.WriteLine("Digite o numero da conta (4 digitos): ");
@@ -116,9 +119,15 @@ class BancoService
             }
             else
             {
-               ContaBancaria conta = new ContaBancaria(numeroConta, nomeTitular, saldoInicial);
-               contas.Add(conta);
-               numero.Add(numeroConta);
+                ContaBancaria conta = new ContaBancaria(numeroConta, nomeTitular, saldoInicial);
+                contas.Add(conta);
+                numero.Add(numeroConta);
+
+
+               using (var contexto = new BancoContext())
+                {
+                    contexto.contass.Add(conta);
+                }
             }
         }
         catch (Exception ex)
@@ -144,6 +153,11 @@ class BancoService
                 contas.Remove(contaRemover);
                 numero.Remove(contaRemover.NumeroConta);
 
+                using (var context = new BancoContext())
+                {
+                    context.contass.Remove(contaRemover);
+                    context.SaveChanges();
+                }
                 Console.WriteLine("Conta removida com sucesso.");
             }
             else
@@ -350,18 +364,20 @@ class BancoService
             Console.WriteLine("qual o número da sua conta?");
             string numeroDaConta = Console.ReadLine();
 
-            ContaBancaria conta = contas.FirstOrDefault(c => c.NumeroConta == numeroDaConta);
+         
 
-            if (conta != null)
+           ContaBancaria contaCliente = contas.FirstOrDefault(c => c.NumeroConta == numeroDaConta);
+            if (contaCliente != null)
             {
-                Console.WriteLine("==== DETALHES DA CONTA ======");
-                conta.exibirDetalhes();
-                Console.WriteLine("==============================");
+                Console.WriteLine("==== CONTA BANCÁRIA DE " + contaCliente.NomeTitular + "=====");
+                contaCliente.exibirDetalhes();
+
             }
             else
             {
-                Console.WriteLine("conta não encontrada");
+               Console.WriteLine("conta não encontrada");
             }
+            
         }
     }
 
